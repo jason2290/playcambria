@@ -17,7 +17,7 @@ def on_click(x, y, button, pressed):
     if pressed and button == mouse.Button.left:      # 只接受左鍵按下
         origin = (x, y)
         print(f"\n已記錄起始位置：{origin}")
-        print("開始執行週期動作（每5秒一次），按 Ctrl+C 停止\n")
+        print("開始執行週期動作（每7秒一次），按 Ctrl+C 停止\n")
         return False    # 停止監聽
 
 print("請在任意地方用「滑鼠左鍵」點一下螢幕來設定原點位置...")
