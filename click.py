@@ -5,6 +5,7 @@ import time
 from pynput import mouse
 
 # 讓 pyautogui 不要太慢
+pyautogui.FAILSAFE = False 
 pyautogui.MINIMUM_DURATION = 0.1
 pyautogui.PAUSE = 0.05
 
@@ -48,7 +49,7 @@ try:
         pyautogui.click()          # 預設點當前位置
         print(f"{time.strftime('%H:%M:%S')} → 已點擊原位置 {origin}")
         
-        # 5. 等待下一個週期（總週期約 5 秒）
+        # 5. 等待下一個週期（總週期約 7 秒）
         time.sleep(7 - 1 - 0.3)    # 扣掉前面已經花的時間，確保整體約 5 秒一次
 
 except KeyboardInterrupt:
