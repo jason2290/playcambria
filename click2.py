@@ -58,7 +58,7 @@ try:
         # 每 50 次點擊檢查一次螢幕是否有 full.jpg
         if click_count % 50 == 0:
             print(f"{time.strftime('%H:%M:%S')} → 檢查螢幕中是否有 {IMAGE_PATH}...")
-            if pyautogui.locateOnScreen(IMAGE_PATH, confidence=0.9) is not None:  # confidence=0.9 提高匹配準確度
+            if pyautogui.locateOnScreen(IMAGE_PATH, confidence=0.7) is not None:  # confidence=0.7 調整匹配準確度
                 print(f"{time.strftime('%H:%M:%S')} → 偵測到 {IMAGE_PATH}！發送 Bark 通知...")
                 # 發送 Bark 通知
                 try:
