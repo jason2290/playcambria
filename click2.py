@@ -1,79 +1,96 @@
+# pip install pyautogui pynput requests
+
+# -*- coding: utf-8 -*-
 import pyautogui
 import time
 from pynput import mouse
-import requests  # 新增，用來發送 Bark 通知
+import requests
+import os
 
-pyautogui.FAILSAFE = False        # 關閉失敗安全
-pyautogui.MINIMUM_DURATION = 0.1
+# ==================== 設定區 ====================
+pyautogui.FAILSAFE = False      # 關閉左上角緊急停止
 pyautogui.PAUSE = 0.05
 
-# Bark 相關設定（請替換成你的 Bark key）
-BARK_KEY = '你的Bark_Key_在這裡'  # 例如：'https://api.day.app/你的key/' 或直接用 key
-BARK_MESSAGE = 'Cambria背包已滿！'
+# ←←←←← 請改這裡！你的 Bark key ←←←←←
+BARK_KEY = "oj9qzw8D7BFe5ZXuXy7nvM"   # 例如：abcd1234abcd1234abcd1234
 
-# 圖片檔案名稱（與腳本同一資料夾）
-IMAGE_PATH = 'full.jpg'
+# 圖片必須和此腳本放在同一資料夾
+FULL_IMAGE = "full.jpg"         # 150% + 背包的完整截圖
 
+# 每點幾下檢查一次
+CHECK_EVERY = 1
+
+# ==================== 全域變數 ====================
 origin = None
+click_count = 0
 
+# ==================== 工具函式 ====================
+def bark(message: str):
+    """發送 Bark 通知"""
+    if not BARK_KEY or BARK_KEY.startswith("請"):
+        print(f"[Bark] 未設定 key，忽略：{message}")
+        return
+    try:
+        url = f"https://api.day.app/{BARK_KEY}/{message}"
+        requests.get(url, timeout=8)
+        print(f"{time.strftime('%H:%M:%S')} → Bark 已推播：{message}")
+    except Exception as e:
+        print(f"{time.strftime('%H:%M:%S')} → Bark 推播失敗：{e}")
+
+def has_full_image():
+    """安全檢查 full.jpg 是否出現在螢幕上"""
+    if not os.path.exists(FULL_IMAGE):
+        print("警告：找不到 full.jpg 檔案！")
+        return False
+    try:
+        # confidence 設 0.9 比較嚴格，避免誤判；可自行調成 0.85~0.95
+        return pyautogui.locateOnScreen(FULL_IMAGE, confidence=0.7) is not None
+    except Exception:
+        return False
+
+# ==================== 設定點擊位置 ====================
 def on_click(x, y, button, pressed):
     global origin
     if pressed and button == mouse.Button.left:
         origin = (x, y)
-        print(f"\n已記錄起始位置：{origin}")
-        print("開始執行週期動作（每7秒一次），按 Ctrl+C 停止\n")
+        print(f"\n已記錄點擊位置：{origin}")
+        print("開始自動點擊＋監控，按 Ctrl+C 停止\n")
         return False
 
-print("請在任意地方用「左鍵點一下」來設定原點位置...")
+print("請用滑鼠左鍵點一下你要狂點的位置...")
 with mouse.Listener(on_click=on_click) as listener:
     listener.join()
 
 if origin is None:
-    print("沒有偵測到點擊，腳本結束")
+    print("沒點到，腳本結束")
     exit()
 
 ox, oy = origin
 
-# 追蹤點擊次數
-click_count = 0
-
+# ==================== 主迴圈 ====================
 try:
     while True:
-        # 1. 移到右上 100,100
+        # 你原本的甩鼠標動作
         pyautogui.moveTo(ox + 100, oy - 100, duration=0.15)
-        
-        # 2. 立刻移回原位
         pyautogui.moveTo(ox, oy, duration=0.15)
-        
-        # 3. 移回後等 1 秒
         time.sleep(1)
-        
-        # 4. 在原位置點一下左鍵
-        pyautogui.click()          # 預設點當前位置
-        print(f"{time.strftime('%H:%M:%S')} → 已點擊原位置 {origin}")
-        
-        # 更新點擊次數
+
+        # 點擊
+        pyautogui.click()
         click_count += 1
-        
-        # 每 50 次點擊檢查一次螢幕是否有 full.jpg
-        if click_count % 50 == 0:
-            print(f"{time.strftime('%H:%M:%S')} → 檢查螢幕中是否有 {IMAGE_PATH}...")
-            if pyautogui.locateOnScreen(IMAGE_PATH, confidence=0.7) is not None:  # confidence=0.7 調整匹配準確度
-                print(f"{time.strftime('%H:%M:%S')} → 偵測到 {IMAGE_PATH}！發送 Bark 通知...")
-                # 發送 Bark 通知
-                try:
-                    response = requests.get(f"https://api.day.app/{BARK_KEY}/{BARK_MESSAGE}")
-                    if response.status_code == 200:
-                        print(f"{time.strftime('%H:%M:%S')} → Bark 通知發送成功！")
-                    else:
-                        print(f"{time.strftime('%H:%M:%S')} → Bark 通知發送失敗：{response.text}")
-                except Exception as e:
-                    print(f"{time.strftime('%H:%M:%S')} → Bark 通知發送錯誤：{e}")
+        print(f"{time.strftime('%H:%M:%S')} → 第 {click_count:4d} 次點擊")
+
+        # 每 50 次檢查一次是否背包滿了
+        if click_count % CHECK_EVERY == 0:
+            print(f"{time.strftime('%H:%M:%S')} → 檢查背包是否已滿...")
+            if has_full_image():
+                bark("Cambria背包已滿！")
+                print("偵測到 full.jpg → 已發送通知！")
             else:
-                print(f"{time.strftime('%H:%M:%S')} → 未偵測到 {IMAGE_PATH}。")
-        
-        # 5. 等待下一個週期（總週期約 7 秒）
-        time.sleep(7 - 1 - 0.3)    # 扣掉前面已經花的時間，確保整體約 5 秒一次
+                print("尚未滿，繼續點～")
+
+        # 週期控制（整體約 5 秒一次）
+        time.sleep(5.7)
 
 except KeyboardInterrupt:
-    print("\n腳本已手動停止，拜拜！")
+    print("\n\n手動停止，腳本結束，拜拜～")
