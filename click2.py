@@ -12,7 +12,7 @@ pyautogui.FAILSAFE = False      # 關閉左上角緊急停止
 pyautogui.PAUSE = 0.05
 
 # ←←←←← 請改這裡！你的 Bark key ←←←←←
-BARK_KEY = "oj9qzw8D7BFe5ZXuXy7nvM"   # 例如：abcd1234abcd1234abcd1234
+BARK_KEY = "你的 Bark key"   # 例如：abcd1234abcd1234abcd1234
 
 # 圖片必須和此腳本放在同一資料夾
 FULL_IMAGE = "full.jpg"         # 150% + 背包的完整截圖
